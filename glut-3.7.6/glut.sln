@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual C++ Express 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "glut32", "lib\glut\glut32.vcproj", "{06A7BC50-4586-41DE-B233-C6A5B7E22AA1}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{06A7BC50-4586-41DE-B233-C6A5B7E22AA1}.Debug|Win32.ActiveCfg = Debug|Win32
+		{06A7BC50-4586-41DE-B233-C6A5B7E22AA1}.Debug|Win32.Build.0 = Debug|Win32
+		{06A7BC50-4586-41DE-B233-C6A5B7E22AA1}.Release|Win32.ActiveCfg = Release|Win32
+		{06A7BC50-4586-41DE-B233-C6A5B7E22AA1}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

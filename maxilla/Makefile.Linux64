@@ -1,0 +1,11 @@
+
+# Makefile for compiling under Linux.
+
+maxilla:	maxilla.cpp maxilla.h
+	gcc -c BMP.c
+	gcc -c PDF.c
+	g++ -Wno-write-strings -o maxilla -g -I../../glui-2.36/src/include parser.cpp BMP.o PDF.o linux.cpp maxilla.cpp quat.cpp -lGL -lGLU -lglut -lglui -lz -lm Linux/libhpdf.a
+
+clean:	
+	rm -f maxilla
+

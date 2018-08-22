@@ -1,0 +1,12 @@
+
+
+# Makefile for compiling under Win32 using Cygwin.
+
+maxilla:	maxilla.cpp maxilla.h PDF.c BMP.c
+	gcc -m32 -c BMP.c
+	gcc -m32 -c PDF.c -I ../libharu-2.1.0/include/
+	g++ -m32 -I/usr/include/mingw -I../zlib -I../glut-3.7.6/include/ -Wno-write-strings -o maxilla -g -I../glui-2.36/src/include parser.cpp maxilla.cpp quat.cpp -lz BMP.o PDF.o -lhpdf -L/usr/lib/win32api -lopengl32 -lglu32
+
+clean:	
+	rm -f maxilla
+

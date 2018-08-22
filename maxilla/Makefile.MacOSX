@@ -1,0 +1,12 @@
+
+# Makefile for compiling under Mac OS/X.
+
+maxilla:	Point.cpp maxilla.cpp maxilla.h PDF.c BMP.c macosx.cpp
+	gcc -g -m32 -c BMP.c
+	gcc -g -m32 -c PDF.c -I../libharu-2.2.1/include
+	g++ -g -m32 -c Point.cpp -I../glui-2.36/src/include
+	g++ -g -m32 -Wno-write-strings -o maxilla -g -I../glui-2.36/src/include macosx.cpp stl.cpp parser.cpp maxilla.cpp quat.cpp -framework GLUT -framework OpenGL -lz Point.o BMP.o PDF.o ../libs-osx/libglui.a ../libs-osx/libhpdf.a -framework Carbon 
+
+clean:	
+	rm -f maxilla *.o
+

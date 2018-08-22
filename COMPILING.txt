@@ -1,0 +1,37 @@
+
++-----------+
+| COMPILING |
++-----------+
+
+You need to obtain:
+	GLUI 2.36 or 2.35 from 
+		http://sourceforge.net/project/showfiles.php?group_id=92496
+		http://glui.sourceforge.net/
+	GLUT 3.7.6 from 
+		http://www.xmission.com/~nate/glut.html
+	libpng (needed to compile zlib)
+	zlib 1.2.3
+		http://sourceforge.net/project/showfiles.php?group_id=5624
+
+Just zlib by itself does not include a Visual C++ project file.
+The easiest thing is to just use the one in libpng, 
+which itself requires zlib.
+
+If using Visual C++ Express (maybe the payware version too)
+you must go into GLUT, specifically into lib/glut
+and edit the .dsp file so that all occurences of
+"VC98" instead read VC.
+
+Then:
+Set all projects' configurations to Release.
+Set all projects to static link except GLUT.
+All include and link directories as needed.
+Build.
+
+Observe that in maxilla.iss, I am including Microsoft.VC90.CRT,
+which is current as of August 2008. This is necessary 
+in order to resolve manifest and side-by-side issues.
+
+Zack Smith
+fbui@comcast.net
+
