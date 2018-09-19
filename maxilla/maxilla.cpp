@@ -6193,6 +6193,12 @@ glui_print_callback (const int control)
 
 	ops_pause = true;	
 
+	glutSetWindow (main_window);
+	saved_window_width = glutGet(GLUT_WINDOW_WIDTH);
+	saved_window_height = glutGet(GLUT_WINDOW_HEIGHT);
+
+	glutReshapeWindow(1200, 712);
+
 	if (doing_multiview) {
 		ops_add (OP_PRINTING_BEGIN, false);
 		ops_add (OP_MULTIVIEW_PRINTING_1, false);
