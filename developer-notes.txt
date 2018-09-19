@@ -1,0 +1,45 @@
+================================================================
+Developer Notes - 2018.
+- from a developer not familiar with the product :)
+================================================================
+
+On Windows, you may want to use Visual Studio 2008, Visual Studio 2008 Express, or Visual C++ 2008 Express to work on 
+this application, as you will have major compilation/linking problems with newer versions of Visual Studio due 
+to many changes, including a massive overhaul of the C Runtime libraries. See:
+ https://docs.microsoft.com/en-us/cpp/porting/overview-of-potential-upgrade-issues-visual-cpp
+ https://docs.microsoft.com/en-us/cpp/porting/visual-cpp-change-history-2003-2015
+ https://blogs.msdn.microsoft.com/vcblog/2014/06/10/the-great-c-runtime-crt-refactoring/
+
+If you choose to try to uplift the solution to VS2017+, be sure to re-test all features and ensure the application still works
+on Windows and Mac. You would have to modify the .iss installer files as well, as there are direct references to 
+files in VS2008 folders. e.g.: "c:/progra~2/Microsoft Visual Studio 9.0/VC/redist/x86/Microsoft.VC90.CRT/msvcr90.dll".
+
+Visual C++ 2008 Express can be downloaded from here: 
+ https://go.microsoft.com/?linkid=7729279
+
+To avoid the registration nag screen:
+ https://stackoverflow.com/questions/4422745/how-do-i-get-the-serial-key-for-visual-studio-express
+
+----------------------------------------------------------------
+To build & release a new version of Maxilla on Windows:
+
+- in defs.h:
+    - increment "PROGRAM_RELEASE" version number
+    - Add a comment to the top of the file describing the change in the new version.
+
+- Rebuild the solution in "Release" mode.
+
+- Build a new installer:
+    - Download "Inno Setup" installer from http://www.jrsoftware.org/isinfo.php
+        -  e.g. innosetup-5.6.1.exe
+    - You may want to increment the version number in the OutputBaseFilename in both
+          maxilla.iss and maxilla-full.iss to match the PROGRAM_RELEASE version above.
+    - Open the 'maxilla-full.iss' script in Inno Setup.
+    - Compile it (Build -> Compile) and ensure it succeeds 
+        (it will generate an installer called "Maxilla-<version>-Full.exe").
+ 
+- Run the installer to ensure Maxilla installs correctly.
+
+- Run Maxilla from the Start Menu and ensure your new features are present and that everything works.
+
+================================================================
