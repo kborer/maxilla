@@ -38,10 +38,16 @@
 
 jmp_buf jb;
 
+// Custom error handler that can be invoked for any HPDF error if passed 
+// into HPDF_New(). e.g. pdf = HPDF_New ((HPDF_Error_Handler) pdf_error, NULL))
+// However, the setjmp/longjmp was causing the application to crash, so this
+// error handler is not currently being used.
 static void
 pdf_error (HPDF_STATUS errnum, HPDF_STATUS detail, void *data)
 {
 	puts ("PDF could not be generated.");
+
+		// Warning: This can cause a crash
     	longjmp (jb, 1);
 }
 
@@ -195,12 +201,18 @@ static float page_aspect;
 int
 pdf_start ()
 {
-	if (setjmp (jb)) {
-		puts ("setjmp problem.");
-		return 0;
-	}
+	// Removing use of 'pdf_error' error handler utilizing setjmp/longjmp because
+	// longjmp was causing a crash:
 
-	if (!(pdf = HPDF_New ((HPDF_Error_Handler) pdf_error, NULL))) {
+			/*if (setjmp (jb)) {
+				puts ("setjmp problem.");
+				return 0;
+			}
+			
+			if (!(pdf = HPDF_New ((HPDF_Error_Handler) pdf_error, NULL))) {
+			*/
+
+	if (!(pdf = HPDF_New (NULL, NULL))) {
 		puts ("PDF cannot not be generated.");
 		return 0;
 	}
@@ -271,12 +283,17 @@ pdf_draw_image (BMP *bmp, float cx, float cy, float w, float h,
 int
 pdf_end (char *pdf_path, char **text, int n_lines, int fontsize, int where)
 {
+	int returnVal = 1;
 	put_text (pdf, page, text, n_lines, fontsize, where);
 
-	HPDF_SaveToFile (pdf, pdf_path);
+	if (HPDF_OK != HPDF_SaveToFile (pdf, pdf_path))
+	{
+		returnVal = 0;
+	}
+
 	HPDF_Free (pdf);
 
 	puts ("PDF creation ended.");
-	return 1;
+	return returnVal;
 }
 

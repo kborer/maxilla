@@ -212,12 +212,14 @@
 // 0.173	STL export
 // 0.174	STL export support for model transformations
 // 0.175	rear view made visible in multiview mode
+// 0.176	Fixed multiview print size. Now allowing multiple successive prints.
+//            Fixed Print / Save PDF crash when the PDF is open/locked.
 //----------------------------------------------------------------------------
 
 #ifndef _DEFS_H
 #define _DEFS_H
 
-#define PROGRAM_RELEASE "0.175"
+#define PROGRAM_RELEASE "0.176"
 
 #define ORTHOCAST
 

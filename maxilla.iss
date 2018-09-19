@@ -10,7 +10,7 @@ UninstallDisplayIcon={app}\maxilla.exe
 Compression=lzma
 SolidCompression=yes
 OutputDir=.
-OutputBaseFilename=Maxilla-0.175
+OutputBaseFilename=Maxilla-0.176
 ChangesAssociations=yes
 
 [InstallDelete]
