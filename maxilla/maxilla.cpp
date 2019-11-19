@@ -165,6 +165,7 @@ static bool op_param = false;
 static BMP* op_bmp = NULL;
 static char op_path [PATH_MAX];
 static bool ops_pause = false;
+static const int MAX_TEMP_PDF_FILES = 50;
 
 void
 ops_init ()
@@ -479,6 +480,7 @@ void set_examination_angles (CameraCharacteristics *cc, const float yaw, const f
 void gui_set_status (char*);
 void set_secondary_value (int which, float value);
 unsigned long determine_clicked_triangle (double &cx, double &cy, double &cz);
+void glui_print_callback (const int control);
 
 int serialization_indentation_level;
 
@@ -662,6 +664,90 @@ CameraCharacteristics::CameraCharacteristics () :
 
 }
 
+//---------------------------------------------------------------------------
+// Name:	get_temp_print_path
+// Purpose:	Gets the path for temporary PDFs used for printing.
+//          Includes trailing slash so filename can be appended directly
+//          to the output path.
+//---------------------------------------------------------------------------
+bool get_temp_print_path(char* dest, size_t destSize)
+{
+	memset(dest, 0, destSize);
+
+	char *homedir = getenv ("HOMEPATH");
+	if (!homedir)
+	{
+		homedir = getenv ("HOME");
+	
+		if (!homedir) 
+		{
+			return false;
+		}
+	}
+
+	if (strlen(homedir) > destSize - 4)
+	{
+		return false;
+	}
+
+	#ifndef __APPLE__
+		strcpy (dest, "c:");
+		strcat (dest, homedir);
+		strcat (dest, "\\");
+	#else
+		strcpy (dest, homedir);
+		strcat (dest, "/");
+	#endif
+
+	return true;
+}
+
+//---------------------------------------------------------------------------
+// Name:	get_temp_print_filename
+// Purpose:	Gets a filename for a temporary PDF, using the given print
+//          number. e.g. maxilla01.pdf, maxilla02.pdf, etc.
+//---------------------------------------------------------------------------
+void get_temp_print_filename(char* dest, size_t destSize, int printNum)
+{
+	memset(dest, 0, destSize);
+	sprintf (dest, "maxilla%02d.pdf", printNum);
+}
+
+//---------------------------------------------------------------------------
+// Name:	cleanup_temp_pdfs
+// Purpose:	Deletes any temporary PDFs used for printing.
+//---------------------------------------------------------------------------
+void cleanup_temp_pdfs()
+{
+	char home_path[MAX_PATH];
+	char full_pdf_path[MAX_PATH];
+	char filename[30];
+
+	memset(home_path, 0, sizeof(char)*MAX_PATH);
+	memset(full_pdf_path, 0, sizeof(char)*MAX_PATH);	
+	memset(filename, 0, 30);
+
+	bool gotPath = get_temp_print_path(home_path, sizeof(char)*MAX_PATH);
+	if (!gotPath)
+		return;
+
+	// Delete all possible temp PDF files.
+	for (int printNum = 1; printNum <= MAX_TEMP_PDF_FILES; printNum++)
+	{			
+		get_temp_print_filename(filename, 30, printNum);
+		strcpy (full_pdf_path, home_path);
+		strcat (full_pdf_path, filename);		
+
+		// Safety check to ensure file we're about to delete is a PDF.
+		int len = strlen (full_pdf_path);
+		if (len >= 4 && strcmp (".pdf", full_pdf_path + len - 4) == 0)
+		{
+			// Delete file, ignoring any error - e.g. file doesn't exist, file is locked.
+			remove(full_pdf_path);
+		}
+	}
+}
+
 void 
 myexit (int retval)
 {
@@ -669,6 +755,16 @@ myexit (int retval)
 	exit (retval);
 }
 
+// Registered handler for atexit(). This is the only way to capture
+// the application exiting if the user clicks the main window [X], 
+// because the OpenGL main loop internally calls exit() without providing
+// any way to handle it. This is the last function to be called after 
+// an exit() is called, right before the program actually exits.
+void
+atexithandler(void)
+{
+	cleanup_temp_pdfs();
+}
 
 //---------------------------------------------------------------------------
 // Name:	fatal_null_pointer
@@ -1263,12 +1359,15 @@ printing_end ()
 	char *text [6] = { practice_name, patient_name, third,
 			fourth, fifth, sixth };
 
-	char tmp [PATH_MAX];
-	sprintf (tmp, "Wrote PDF to %s.\n", op_path);
-	gui_set_status (tmp);
-
-	pdf_end (op_path, text, 6, 8,
+	int printResult = pdf_end (op_path, text, 6, 8,
 			doing_multiview ? BOTTOM : TOPLEFT);
+
+	if (printResult == 1)
+	{
+		char tmp [PATH_MAX+20];
+		sprintf (tmp, "Wrote PDF to %s.\n", op_path);
+		gui_set_status (tmp);
+	}
 
 	//----------------------------------------
 	// Restore colors.
@@ -1299,6 +1398,12 @@ printing_end ()
 	BMP_delete (op_bmp);
 	op_bmp = NULL;
 
+	if (printResult == 0)
+	{
+		char tmp [PATH_MAX+100];
+		sprintf (tmp, "Unable to write to '%s'. If this PDF file is open in another program, please close it and try again.\n", op_path);
+		warning(tmp);
+	}
 }
 
 
@@ -4044,29 +4149,7 @@ handle_keypress (unsigned char key, const int x, const int y)
 		break;
 
 	case 'p':
-		if (doing_multiview) {
-			int i;
-			for (i = 0; i < N_SUBWINDOWS; i++) {
-				glutSetWindow (subwindows [i]);
-				glutHideWindow ();
-			}
-			op_t0 = millisecond_time();
-			ops_add (OP_PRINTING_BEGIN, false);
-			ops_add (OP_MULTIVIEW_PRINTING_1, false);
-			ops_add (OP_MULTIVIEW_PRINTING_2, false);
-			ops_add (OP_MULTIVIEW_PRINTING_3, false);
-			ops_add (OP_MULTIVIEW_PRINTING_4, false);
-			ops_add (OP_MULTIVIEW_PRINTING_5, false);
-			ops_add (OP_MULTIVIEW_PRINTING_6, false);
-			ops_add (OP_PRINTING_END, false);
-			op_duration = 500;
-		} 
-		else {
-		//	dump_screen_to_pdf (false);
-			ops_add (OP_PRINTING_BEGIN, false);
-			ops_add (OP_SINGLEVIEW_PRINTING, false);
-			ops_add (OP_PRINTING_END, false);
-		}
+		glui_print_callback(0);
 		break;
 
 	case 'i':
@@ -6175,23 +6258,57 @@ Model::autocenter ()
 void 
 glui_print_callback (const int control)
 {
-	char *homedir = getenv ("HOMEPATH");
-	if (!homedir)
-		homedir = getenv ("HOME");
-	if (!homedir) {
+	char home_path[MAX_PATH];
+	memset(home_path, 0, sizeof(char)*MAX_PATH);
+	
+	bool gotPath = get_temp_print_path(home_path, sizeof(char)*MAX_PATH);
+	if (!gotPath)
+	{
 		warning ("Cannot locate user's home directory.");
 		return;
 	}
-#ifndef __APPLE__
-	strcpy (op_path, "c:");
-	strcat (op_path, homedir);
-	strcat (op_path, "\\maxilla.pdf");
-#else
-	strcpy (op_path, homedir);
-	strcat (op_path, "/maxilla.pdf");
-#endif
 
-	ops_pause = true;	
+	// Cycle through maxilla01.pdf, maxilla02.pdf, ..., maxilla50.pdf until we find 
+	// a free temporary filename we can write to. This is done because Adobe locks
+	// any file it has open, so if a temp print file is already open, we can't 
+	// write to the same filename.
+	int printNumber = 1;
+	char filename[30];
+	memset(filename, 0, 30);
+
+	while (printNumber <= MAX_TEMP_PDF_FILES)
+	{			
+		get_temp_print_filename(filename, 30, printNumber);
+		strcpy (op_path, home_path);
+		strcat (op_path, filename);		
+
+		// Check if file can be opened for writing.
+		FILE * pFile = NULL;
+		pFile = fopen (op_path, "wb");
+		if (pFile != NULL)
+		{
+			// Success. Close file, exit loop, and use this filename.
+			fclose (pFile);
+			break;
+		}
+		
+		printNumber++;
+	}
+
+	if (printNumber > MAX_TEMP_PDF_FILES)
+	{
+		warning("All available temporary PDF files used for printing are open in another program. Please close some PDFs and try printing again.");
+		op_path[0] = 0;
+		return;
+	}
+
+	ops_pause = true;
+
+	glutSetWindow (main_window);
+	saved_window_width = glutGet(GLUT_WINDOW_WIDTH);
+	saved_window_height = glutGet(GLUT_WINDOW_HEIGHT);
+
+	glutReshapeWindow(1200, 712);
 
 	if (doing_multiview) {
 		ops_add (OP_PRINTING_BEGIN, false);
@@ -7518,6 +7635,9 @@ main (int argc, char **argv)
 	InputFile *file = NULL;
 
 	did_manual_spacing = false;
+
+	// Add custom handler to catch app exiting, so we can clean up.
+	atexit(atexithandler);
 
 #if defined (WIN32) && !defined (DEBUG)
 	//----------------------------------------
