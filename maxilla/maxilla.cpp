@@ -1280,6 +1280,22 @@ warning (msg);
 	}
 }
 
+bool isNullOrWhitespace(char* text)
+{
+	if (!text) return true;
+	if (strlen(text) == 0) return true;
+	char* s = text;
+	for (unsigned int i = 0; i < strlen(text); i++) 
+	{
+		if(!isspace((int)(*s)))
+		{
+			return false;
+		}
+		s++;
+	}
+	return true;
+}
+
 //---------------------------------------------------------------------------
 // Name:	printing_end
 // Purpose:	Output current view as PDF file.
@@ -1311,15 +1327,18 @@ printing_end ()
 		sprintf (practice_name, "Practice: (not specified)");
 
 	//-------------
-	if (model && model->patient_firstname && model->patient_lastname)
+	bool hasFirstName = !isNullOrWhitespace(model->patient_firstname);
+	bool hasLastName = !isNullOrWhitespace(model->patient_lastname);
+
+	if (model && hasFirstName && hasLastName)
 		sprintf (patient_name, "Patient: %s, %s",
 			model->patient_firstname, model->patient_lastname);
 	else
-	if (model && !model->patient_firstname && model->patient_lastname)
+	if (model && !hasFirstName && hasLastName)
 		sprintf (patient_name, "Patient: %s",
 			model->patient_lastname);
 	else
-	if (model && model->patient_firstname && !model->patient_lastname)
+	if (model && hasFirstName && !hasLastName)
 		sprintf (patient_name, "Patient: %s",
 			model->patient_firstname);
 	else

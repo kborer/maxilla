@@ -214,12 +214,13 @@
 // 0.175	rear view made visible in multiview mode
 // 0.176	Fixed multiview print size. Now allowing multiple successive prints.
 //            Fixed Print / Save PDF crash when the PDF is open/locked.
+// 0.177	Fixed trailing comma after patient name in PDF.
 //----------------------------------------------------------------------------
 
 #ifndef _DEFS_H
 #define _DEFS_H
 
-#define PROGRAM_RELEASE "0.176"
+#define PROGRAM_RELEASE "0.177"
 
 #define ORTHOCAST
 
